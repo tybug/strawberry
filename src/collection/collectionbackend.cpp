@@ -66,16 +66,13 @@ CollectionBackend::CollectionBackend(QObject *parent)
 
 }
 
-void CollectionBackend::Init(Database *db, TaskManager *task_manager, const Song::Source source, const QString &songs_table, const QString &fts_table, const QString &dirs_table, const QString &subdirs_table) {
-
+void CollectionBackend::Init(Database *db, TaskManager *task_manager, const Song::Source source, const QString &songs_table, const QString &dirs_table, const QString &subdirs_table) {
   db_ = db;
   task_manager_ = task_manager;
   source_ = source;
   songs_table_ = songs_table;
   dirs_table_ = dirs_table;
   subdirs_table_ = subdirs_table;
-  fts_table_ = fts_table;
-
 }
 
 void CollectionBackend::Close() {
@@ -112,6 +109,32 @@ void CollectionBackend::ReportErrors(const CollectionQuery &query) {
     error += "Faulty SQL query: " + query.lastQuery();
     emit Error(error);
   }
+
+}
+
+void CollectionBackend::GetAllSongsAsync(const int id) {
+  metaObject()->invokeMethod(this, "GetAllSongs", Qt::QueuedConnection, Q_ARG(int, id));
+}
+
+void CollectionBackend::GetAllSongs(const int id) {
+
+  QMutexLocker l(db_->Mutex());
+  QSqlDatabase db(db_->Connect());
+
+  QSqlQuery q(db);
+  q.setForwardOnly(true);
+  q.prepare(QString("SELECT ROWID, " + Song::kColumnSpec + " FROM %1").arg(songs_table_));
+  q.exec();
+  if (db_->CheckErrors(q)) emit GotSongs(SongList(), id);
+
+  SongList songs;
+  while (q.next()) {
+    Song song(source_);
+    song.InitFromQuery(q, true);
+    songs << song;
+  }
+
+  emit GotSongs(songs, id);
 
 }
 
@@ -619,17 +642,6 @@ void CollectionBackend::AddOrUpdateSongs(const SongList &songs) {
           }
         }
 
-        {
-          SqlQuery q(db);
-          q.prepare(QString("UPDATE %1 SET " + Song::kFtsUpdateSpec + " WHERE ROWID = :id").arg(fts_table_));
-          new_song.BindToFtsQuery(&q);
-          q.BindValue(":id", new_song.id());
-          if (!q.Exec()) {
-            db_->ReportErrors(q);
-            return;
-          }
-        }
-
         deleted_songs << old_song;
         added_songs << new_song;
 
@@ -655,17 +667,6 @@ void CollectionBackend::AddOrUpdateSongs(const SongList &songs) {
     }
 
     if (id == -1) return;
-
-    { // Add to the FTS index
-      SqlQuery q(db);
-      q.prepare(QString("INSERT INTO %1 (ROWID, " + Song::kFtsColumnSpec + ") VALUES (:id, " + Song::kFtsBindSpec + ")").arg(fts_table_));
-      q.BindValue(":id", id);
-      song.BindToFtsQuery(&q);
-      if (!q.Exec()) {
-        db_->ReportErrors(q);
-        return;
-      }
-    }
 
     Song song_copy(song);
     song_copy.set_id(id);
@@ -844,8 +845,6 @@ void CollectionBackend::DeleteSongs(const SongList &songs) {
 
   SqlQuery remove(db);
   remove.prepare(QString("DELETE FROM %1 WHERE ROWID = :id").arg(songs_table_));
-  SqlQuery remove_fts(db);
-  remove_fts.prepare(QString("DELETE FROM %1 WHERE ROWID = :id").arg(fts_table_));
 
   ScopedTransaction transaction(&db);
   for (const Song &song : songs) {
@@ -855,11 +854,11 @@ void CollectionBackend::DeleteSongs(const SongList &songs) {
       return;
     }
 
-    remove_fts.BindValue(":id", song.id());
-    if (!remove_fts.Exec()) {
-      db_->ReportErrors(remove_fts);
-      return;
-    }
+  ScopedTransaction transaction(&db);
+  for (const Song &song : songs) {
+    remove.bindValue(":id", song.id());
+    remove.exec();
+    db_->CheckErrors(remove);
   }
   transaction.Commit();
 
@@ -907,7 +906,7 @@ QStringList CollectionBackend::GetAll(const QString &column, const QueryOptions 
   QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());
 
-  CollectionQuery query(db, songs_table_, fts_table_, opt);
+  CollectionQuery query(db, songs_table_, opt);
   query.SetColumnSpec("DISTINCT " + column);
   query.AddCompilationRequirement(false);
 
@@ -935,13 +934,13 @@ QStringList CollectionBackend::GetAllArtistsWithAlbums(const QueryOptions &opt) 
   QSqlDatabase db(db_->Connect());
 
   // Albums with 'albumartist' field set:
-  CollectionQuery query(db, songs_table_, fts_table_, opt);
+  CollectionQuery query(db, songs_table_, opt);
   query.SetColumnSpec("DISTINCT albumartist");
   query.AddCompilationRequirement(false);
   query.AddWhere("album", "", "!=");
 
   // Albums with no 'albumartist' (extract 'artist'):
-  CollectionQuery query2(db, songs_table_, fts_table_, opt);
+  CollectionQuery query2(db, songs_table_, opt);
   query2.SetColumnSpec("DISTINCT artist");
   query2.AddCompilationRequirement(false);
   query2.AddWhere("album", "", "!=");
@@ -982,7 +981,7 @@ SongList CollectionBackend::GetArtistSongs(const QString &effective_albumartist,
   QSqlDatabase db(db_->Connect());
   QMutexLocker l(db_->Mutex());
 
-  CollectionQuery query(db, songs_table_, fts_table_, opt);
+  CollectionQuery query(db, songs_table_, opt);
   query.AddCompilationRequirement(false);
   query.AddWhere("effective_albumartist", effective_albumartist);
 
@@ -1000,7 +999,7 @@ SongList CollectionBackend::GetAlbumSongs(const QString &effective_albumartist, 
   QSqlDatabase db(db_->Connect());
   QMutexLocker l(db_->Mutex());
 
-  CollectionQuery query(db, songs_table_, fts_table_, opt);
+  CollectionQuery query(db, songs_table_, opt);
   query.AddCompilationRequirement(false);
   query.AddWhere("effective_albumartist", effective_albumartist);
   query.AddWhere("album", album);
@@ -1019,7 +1018,7 @@ SongList CollectionBackend::GetSongsByAlbum(const QString &album, const QueryOpt
   QSqlDatabase db(db_->Connect());
   QMutexLocker l(db_->Mutex());
 
-  CollectionQuery query(db, songs_table_, fts_table_, opt);
+  CollectionQuery query(db, songs_table_, opt);
   query.AddCompilationRequirement(false);
   query.AddWhere("album", album);
 
@@ -1296,7 +1295,7 @@ SongList CollectionBackend::GetCompilationSongs(const QString &album, const Quer
   QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());
 
-  CollectionQuery query(db, songs_table_, fts_table_, opt);
+  CollectionQuery query(db, songs_table_, opt);
   query.SetColumnSpec("%songs_table.ROWID, " + Song::kColumnSpec);
   query.AddCompilationRequirement(true);
   query.AddWhere("album", album);
@@ -1437,7 +1436,7 @@ CollectionBackend::AlbumList CollectionBackend::GetAlbums(const QString &artist,
   QMutexLocker l(db_->Mutex());
   QSqlDatabase db(db_->Connect());
 
-  CollectionQuery query(db, songs_table_, fts_table_, opt);
+  CollectionQuery query(db, songs_table_, opt);
   query.SetColumnSpec("url, effective_albumartist, album, compilation_effective, art_automatic, art_manual, filetype, cue_path");
   query.SetOrderBy("effective_albumartist, album, url");
 
@@ -1522,7 +1521,7 @@ CollectionBackend::Album CollectionBackend::GetAlbumArt(const QString &effective
   ret.album = album;
   ret.album_artist = effective_albumartist;
 
-  CollectionQuery query(db, songs_table_, fts_table_, QueryOptions());
+  CollectionQuery query(db, songs_table_, QueryOptions());
   query.SetColumnSpec("art_automatic, art_manual, url");
   if (!effective_albumartist.isEmpty()) {
     query.AddWhere("effective_albumartist", effective_albumartist);
@@ -1556,7 +1555,7 @@ void CollectionBackend::UpdateManualAlbumArt(const QString &effective_albumartis
   QSqlDatabase db(db_->Connect());
 
   // Get the songs before they're updated
-  CollectionQuery query(db, songs_table_, fts_table_);
+  CollectionQuery query(db, songs_table_);
   query.SetColumnSpec("ROWID, " + Song::kColumnSpec);
   query.AddWhere("effective_albumartist", effective_albumartist);
   query.AddWhere("album", album);
@@ -1623,7 +1622,7 @@ void CollectionBackend::UpdateAutomaticAlbumArt(const QString &effective_albumar
   QSqlDatabase db(db_->Connect());
 
   // Get the songs before they're updated
-  CollectionQuery query(db, songs_table_, fts_table_);
+  CollectionQuery query(db, songs_table_);
   query.SetColumnSpec("ROWID, " + Song::kColumnSpec);
   query.AddWhere("effective_albumartist", effective_albumartist);
   query.AddWhere("album", album);
@@ -1682,7 +1681,7 @@ void CollectionBackend::ForceCompilation(const QString &album, const QList<QStri
 
   for (const QString &artist : artists) {
     // Get the songs before they're updated
-    CollectionQuery query(db, songs_table_, fts_table_);
+    CollectionQuery query(db, songs_table_);
     query.SetColumnSpec("ROWID, " + Song::kColumnSpec);
     query.AddWhere("album", album);
     if (!artist.isEmpty()) query.AddWhere("artist", artist);
@@ -1807,15 +1806,6 @@ void CollectionBackend::DeleteAll() {
     {
       SqlQuery q(db);
       q.prepare("DELETE FROM " + songs_table_);
-      if (!q.Exec()) {
-        db_->ReportErrors(q);
-        return;
-      }
-    }
-
-    {
-      SqlQuery q(db);
-      q.prepare("DELETE FROM " + fts_table_);
       if (!q.Exec()) {
         db_->ReportErrors(q);
         return;
