@@ -718,12 +718,12 @@ MainWindow::MainWindow(Application *app, std::shared_ptr<SystemTrayIcon> tray_ic
   playlist_menu_->addAction(ui_->action_renumber_tracks);
   playlist_menu_->addAction(ui_->action_selection_set_value);
 #ifdef HAVE_MUSICBRAINZ
-  // playlist_menu_->addAction(ui_->action_auto_complete_tags);
+  playlist_menu_->addAction(ui_->action_auto_complete_tags);
 #endif
   playlist_rescan_songs_ = playlist_menu_->addAction(IconLoader::Load("view-refresh"), tr("Rescan song(s)..."), this, &MainWindow::RescanSongs);
-  // playlist_menu_->addAction(playlist_rescan_songs_);
+  playlist_menu_->addAction(playlist_rescan_songs_);
 #ifdef HAVE_GSTREAMER
-  // playlist_menu_->addAction(ui_->action_add_files_to_transcoder);
+  playlist_menu_->addAction(ui_->action_add_files_to_transcoder);
 #endif
   playlist_menu_->addSeparator();
   playlist_copy_url_ = playlist_menu_->addAction(IconLoader::Load("edit-copy"), tr("Copy URL(s)..."), this, &MainWindow::PlaylistCopyUrl);
@@ -1030,6 +1030,16 @@ MainWindow::MainWindow(Application *app, std::shared_ptr<SystemTrayIcon> tray_ic
   qLog(Debug) << "Started" << QThread::currentThread();
   initialized_ = true;
 
+  playlist_show_in_collection_->setVisible(false);
+  playlist_play_pause_->setVisible(false);
+  ui_->action_stop->setVisible(false);
+  playlist_stop_after_->setVisible(false);
+  ui->action_remove_from_playlist->setVisible(false);
+  ui_->action_edit_track->setVisible(false);
+  ui_->action_edit_value->setVisible(false);
+  ui_->action_auto_complete_tags->setVisible(false);
+  playlist_rescan_songs_->setVisible(false);
+  ui->action_add_files_to_transcoder->setVisible(false);
 }
 
 MainWindow::~MainWindow() {
@@ -2012,6 +2022,11 @@ void MainWindow::PlaylistRightClick(const QPoint global_pos, const QModelIndex &
 
   playlist_menu_->popup(global_pos);
 
+  playlist_queue_->setVisible(false);
+  playlist_queue_play_next_->setVisible(false);
+  playlist_skip_->setVisible(false);
+  add_to_another_menu->setVisible(false);
+  playlist_copy_url_->setVisible(false);
 }
 
 void MainWindow::PlaylistPlay() {
@@ -2493,6 +2508,8 @@ bool MainWindow::LoadUrl(const QString &url) {
 
 void MainWindow::PlaylistUndoRedoChanged(QAction *undo, QAction *redo) {
 
+  undo->setVisible(false);
+  redo->setVisible(false);
   playlist_menu_->insertAction(playlist_undoredo_, undo);
   playlist_menu_->insertAction(playlist_undoredo_, redo);
 }
