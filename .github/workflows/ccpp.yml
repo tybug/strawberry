@@ -2149,10 +2149,9 @@ jobs:
 
 
   upload-windows:
-    if: ${{ false }}
     name: Upload Windows Setup
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: ${{ false }} && github.ref == 'refs/heads/master'
     needs:
       - build-windows-msvc
     steps:
