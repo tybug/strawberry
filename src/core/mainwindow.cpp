@@ -1034,12 +1034,12 @@ MainWindow::MainWindow(Application *app, std::shared_ptr<SystemTrayIcon> tray_ic
   playlist_play_pause_->setVisible(false);
   ui_->action_stop->setVisible(false);
   playlist_stop_after_->setVisible(false);
-  ui->action_remove_from_playlist->setVisible(false);
+  ui_->action_remove_from_playlist->setVisible(false);
   ui_->action_edit_track->setVisible(false);
   ui_->action_edit_value->setVisible(false);
   ui_->action_auto_complete_tags->setVisible(false);
   playlist_rescan_songs_->setVisible(false);
-  ui->action_add_files_to_transcoder->setVisible(false);
+  ui_->action_add_files_to_transcoder->setVisible(false);
 }
 
 MainWindow::~MainWindow() {
