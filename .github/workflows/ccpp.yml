@@ -2125,10 +2125,9 @@ jobs:
 
 
   upload-macos:
-    if: ${{ false }}
     name: Upload macOS DMG
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: ${{ false }} && github.ref == 'refs/heads/master'
     needs:
       - build-macos
     steps:
