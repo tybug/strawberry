@@ -718,12 +718,12 @@ MainWindow::MainWindow(Application *app, std::shared_ptr<SystemTrayIcon> tray_ic
   playlist_menu_->addAction(ui_->action_renumber_tracks);
   playlist_menu_->addAction(ui_->action_selection_set_value);
 #ifdef HAVE_MUSICBRAINZ
-  playlist_menu_->addAction(ui_->action_auto_complete_tags);
+  // playlist_menu_->addAction(ui_->action_auto_complete_tags);
 #endif
   playlist_rescan_songs_ = playlist_menu_->addAction(IconLoader::Load("view-refresh"), tr("Rescan song(s)..."), this, &MainWindow::RescanSongs);
-  playlist_menu_->addAction(playlist_rescan_songs_);
+  // playlist_menu_->addAction(playlist_rescan_songs_);
 #ifdef HAVE_GSTREAMER
-  playlist_menu_->addAction(ui_->action_add_files_to_transcoder);
+  // playlist_menu_->addAction(ui_->action_add_files_to_transcoder);
 #endif
   playlist_menu_->addSeparator();
   playlist_copy_url_ = playlist_menu_->addAction(IconLoader::Load("edit-copy"), tr("Copy URL(s)..."), this, &MainWindow::PlaylistCopyUrl);
