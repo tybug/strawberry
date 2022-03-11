@@ -74,6 +74,7 @@ jobs:
 
 
   build_opensuse_lp153_qt5:
+    if: ${{ false }}
     name: Build openSUSE Leap 15.3 Qt 5
     runs-on: ubuntu-latest
     container:
@@ -155,6 +156,7 @@ jobs:
 
 
   build_opensuse_lp153_qt6:
+    if: ${{ false }}
     name: Build openSUSE Leap 15.3 Qt 6
     runs-on: ubuntu-latest
     container:
@@ -239,6 +241,7 @@ jobs:
         run: rpmbuild -ba ../dist/unix/strawberry.spec
 
   build_opensuse_lp154_qt5:
+    if: ${{ false }}
     name: Build openSUSE Leap 15.4 Qt 5
     runs-on: ubuntu-latest
     container:
@@ -317,6 +320,7 @@ jobs:
 
 
   build_opensuse_lp154_qt6:
+    if: ${{ false }}
     name: Build openSUSE Leap 15.4 Qt 6
     runs-on: ubuntu-latest
     container:
@@ -398,6 +402,7 @@ jobs:
         run: rpmbuild -ba ../dist/unix/strawberry.spec
 
   build_opensuse_tumbleweed_qt5:
+    if: ${{ false }}
     name: Build openSUSE Tumbleweed Qt 5
     runs-on: ubuntu-latest
     container:
@@ -481,6 +486,7 @@ jobs:
 
 
   build_opensuse_tumbleweed_qt6:
+    if: ${{ false }}
     name: Build openSUSE Tumbleweed Qt 6
     runs-on: ubuntu-latest
     container:
@@ -563,6 +569,7 @@ jobs:
 
 
   build_fedora_34:
+    if: ${{ false }}
     name: Build Fedora 34
     runs-on: ubuntu-latest
     container:
@@ -640,6 +647,7 @@ jobs:
 
 
   build_fedora_35:
+    if: ${{ false }}
     name: Build Fedora 35
     runs-on: ubuntu-latest
     container:
@@ -716,6 +724,7 @@ jobs:
         run: rpmbuild -ba ../dist/unix/strawberry.spec
 
   build_fedora_36:
+    if: ${{ false }}
     name: Build Fedora 36
     runs-on: ubuntu-latest
     container:
@@ -792,6 +801,7 @@ jobs:
         run: rpmbuild -ba ../dist/unix/strawberry.spec
 
   build_openmandriva_cooker:
+    if: ${{ false }}
     name: Build OpenMandriva Lx 4.2
     runs-on: ubuntu-latest
     container:
@@ -877,6 +887,7 @@ jobs:
 
 
   build_debian_buster:
+    if: ${{ false }}
     name: Build Debian Buster
     runs-on: ubuntu-latest
     container:
@@ -935,6 +946,7 @@ jobs:
 
 
   build_debian_bullseye:
+    if: ${{ false }}
     name: Build Debian Bullseye
     runs-on: ubuntu-latest
     container:
@@ -992,6 +1004,7 @@ jobs:
         run: dpkg-buildpackage -b -d -uc -us -nc -j2
 
   build_debian_bookworm:
+    if: ${{ false }}
     name: Build Debian Bookworm
     runs-on: ubuntu-latest
     container:
@@ -1050,6 +1063,7 @@ jobs:
 
 
   build_ubuntu_bionic:
+    if: ${{ false }}
     name: Build Ubuntu Bionic
     runs-on: ubuntu-latest
     container:
@@ -1113,6 +1127,7 @@ jobs:
 
 
   build_ubuntu_focal:
+    if: ${{ false }}
     name: Build Ubuntu Focal
     runs-on: ubuntu-latest
     container:
@@ -1176,6 +1191,7 @@ jobs:
 
 
   build_ubuntu_impish:
+    if: ${{ false }}
     name: Build Ubuntu Impish
     runs-on: ubuntu-latest
     container:
@@ -1238,6 +1254,7 @@ jobs:
         run: dpkg-buildpackage -b -d -uc -us -nc -j2
 
   build_ubuntu_jammy:
+    if: ${{ false }}
     name: Build Ubuntu Jammy
     runs-on: ubuntu-latest
     container:
@@ -1430,6 +1447,7 @@ jobs:
 
 
   build-windows-mingw:
+    if: ${{ false }}
     name: Build Windows MinGW
     runs-on: ubuntu-latest
     container:
@@ -1593,6 +1611,7 @@ jobs:
         run: makensis strawberry.nsi
 
   build-windows-msvc:
+    if: ${{ false }}
     name: Build Windows MSVC
     runs-on: windows-2019
     steps:
@@ -2106,6 +2125,7 @@ jobs:
 
 
   upload-macos:
+    if: ${{ false }}
     name: Upload macOS DMG
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
@@ -2130,6 +2150,7 @@ jobs:
 
 
   upload-windows:
+    if: ${{ false }}
     name: Upload Windows Setup
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
@@ -2154,6 +2175,7 @@ jobs:
 
 
   build-freebsd:
+    if: ${{ false }}
     name: Build FreeBSD
     runs-on: macos-10.15
     steps:
