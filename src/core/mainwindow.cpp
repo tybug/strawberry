@@ -2018,6 +2018,7 @@ void MainWindow::PlaylistRightClick(const QPoint global_pos, const QModelIndex &
 
     QObject::connect(add_to_another_menu, &QMenu::triggered, this, &MainWindow::AddToPlaylistFromAction);
 
+    add_to_another_menu->setVisible(false);
   }
 
   playlist_menu_->popup(global_pos);
@@ -2025,7 +2026,6 @@ void MainWindow::PlaylistRightClick(const QPoint global_pos, const QModelIndex &
   playlist_queue_->setVisible(false);
   playlist_queue_play_next_->setVisible(false);
   playlist_skip_->setVisible(false);
-  add_to_another_menu->setVisible(false);
   playlist_copy_url_->setVisible(false);
 }
 
